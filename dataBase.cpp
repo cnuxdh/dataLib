@@ -17,6 +17,7 @@ CGdalImage::CGdalImage()
 CGdalImage::~CGdalImage()
 {
 	
+	
 }
 
 
@@ -24,12 +25,15 @@ int CGdalImage::Load(char* filepath)
 {
   
   
-  
-  
-		
+	
+  		
 	return 0;
 }
 
+unsigned char* CGdalImage::GetByteBuffer()
+{
+	return m_pByteBuffer;	
+}
 
 
 /////////////////////// CSiftFeatureDataBinary /////////////////////

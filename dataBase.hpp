@@ -18,6 +18,9 @@ class CImageBase
 	
 		virtual int Load(char* filepath){return 0;}
 		virtual unsigned char* GetByteBuffer(){return 0;}
+		virtual int GetImageHt(){return 0;}
+		virtual int GetImageWd(){return 0;}
+		
 };
 
 
@@ -29,10 +32,14 @@ class CGdalImage: public CImageBase
 	
 		int Load(char* filepath);
 		unsigned char* GetByteBuffer();
-
+		int GetImageHt(){return m_ht;}
+		int GetImageWd(){return m_wd;}
+		
 	private:
 		unsigned char* m_pByteBuffer;
+		int m_ht,m_wd;
 };
+
 
 
 
