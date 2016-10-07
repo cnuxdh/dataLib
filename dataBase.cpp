@@ -6,13 +6,14 @@
 //gdal header file
 #include"geotiff.h"
 
+#include"assert.h"
 
 
 
 CGdalImage::CGdalImage()
 {
 	m_pByteBuffer = NULL;
-	m_nCounter = 0;
+	//m_nCounter = 0;
 }
 
 
@@ -27,23 +28,27 @@ CGdalImage::~CGdalImage()
 
 int CGdalImage::Load(char* filepath, int flags)
 {
-  
+  printf("[CGdalImage::Load] ... \n");
   //
   int nChannels = 0;
   
   stGeoInfo geoinfo;
-  ReadGeoFile(filepath, geoinfo);
+  GetGeoInformation(filepath, geoinfo);
   nChannels = geoinfo.nband;
   
-  m_nRows = geoinfo.ht;
-  m_nCols = geoinfo.wd;
-  m_nChannels = nChannels; 
+  m_ht = geoinfo.ht;
+  m_wd = geoinfo.wd;
   
-  m_pByteBuffer = (unsigned char*)malloc(m_nRows*m_nCols*m_nChannels);
+  //printf("ht: %d  wd: %d \n", m_ht, m_wd);
   
   //gray image
   if(flags==0)
   {
+  	
+  	m_nChannels = 1; 
+  
+  	m_pByteBuffer = (unsigned char*)malloc(m_ht*m_wd*m_nChannels);
+  
   	
   	if(nChannels==1)
   	{
@@ -51,7 +56,7 @@ int CGdalImage::Load(char* filepath, int flags)
   			int ht,wd;
   			ReadGeoFileByte(filepath, 0, &pGray, ht, wd);
   			
-  			assert(  (m_nRows==ht) && (m_nCols==wd) ) ;
+  			assert(  (m_ht==ht) && (m_wd==wd) ) ;
   			
   			memcpy(m_pByteBuffer, pGray, ht*wd);
   			
@@ -66,7 +71,7 @@ int CGdalImage::Load(char* filepath, int flags)
   			
   			ReadGeoFileByte(filepath, 2, &pRed, ht, wd);
   			
-  			assert(  (m_nRows==ht) && (m_nCols==wd) ) ;
+  			assert(  (m_ht==ht) && (m_wd==wd) ) ;
   			
   			memcpy(m_pByteBuffer, pRed, ht*wd);
   			
@@ -77,13 +82,17 @@ int CGdalImage::Load(char* filepath, int flags)
   }
   else if(flags==1) //color image
   {	
+  	m_nChannels = 3; 
+  
+  	m_pByteBuffer = (unsigned char*)malloc(m_ht*m_wd*m_nChannels);
+  
   	if(nChannels==1)
   	{
   			unsigned char* pGray = NULL;
   			int ht,wd;
   			ReadGeoFileByte(filepath, 0, &pGray, ht, wd);
   			
-  			assert(  (m_nRows==ht) && (m_nCols==wd) ) ;
+  			assert(  (m_ht==ht) && (m_wd==wd) ) ;
   			
   			memcpy(m_pByteBuffer, pGray, ht*wd);
   			memcpy(m_pByteBuffer+ht*wd, pGray, ht*wd);
@@ -102,7 +111,7 @@ int CGdalImage::Load(char* filepath, int flags)
   			ReadGeoFileByte(filepath, 1, &pGreen, ht, wd);
   			ReadGeoFileByte(filepath, 2, &pRed, ht, wd);
   			
-  			assert(  (m_nRows==ht) && (m_nCols==wd) ) ;
+  			assert(  (m_ht==ht) && (m_wd==wd) ) ;
   			
   			memcpy(m_pByteBuffer, pBlue, ht*wd);
   			memcpy(m_pByteBuffer+ht*wd, pGreen, ht*wd);
@@ -118,6 +127,33 @@ int CGdalImage::Load(char* filepath, int flags)
 }
 
 
+int CGdalImage::Write(char* filepath,
+	unsigned char* pImage, int ht, int wd, int nChannels)
+{
+	
+	//for jpg
+	if( nChannels== 1)
+	{
+		GdalWriteJpgCopy(filepath, pImage, ht, wd);
+	}
+	else if(nChannels == 3)
+	{
+		GdalWriteImageByteColor(filepath, pImage, pImage+ht*wd,
+			pImage+ht*wd*2, ht, wd);
+	}
+	else
+	{
+		
+	}
+	
+	//for tif
+	
+
+	return 0;
+}
+
+
+
 unsigned char* CGdalImage::GetByteBuffer()
 {
 	return m_pByteBuffer;	
@@ -125,13 +161,13 @@ unsigned char* CGdalImage::GetByteBuffer()
 
 
 //generate bytemat from image
-CByteMat& ImageRead(char* filepath, int flags)
+CMat ImageRead(char* filepath, int flags)
 {
 	
 	CImageBase* pImage = new CGdalImage();
 	pImage->Load(filepath, flags);
 	
-	CByteMat byteMat( pImage->GetByteBuffer(), 
+	CMat byteMat( pImage->GetByteBuffer(), 
 		pImage->GetImageHt(), 
 		pImage->GetImageWd(),
 		pImage->GetChannels()
@@ -142,6 +178,20 @@ CByteMat& ImageRead(char* filepath, int flags)
 	return byteMat;
 }
 
+int ImageWrite(char* filepath, CMat& image)
+{
+	
+	CImageBase* pImage = new CGdalImage();
+	
+	pImage->Write(filepath, image.GetBuffer(), 
+		image.GetRows(), 
+		image.GetCols(),
+		image.GetDims()
+		);
+	
+	delete pImage;
+	return 0;
+}
 
 
 

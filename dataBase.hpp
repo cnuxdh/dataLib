@@ -1,8 +1,10 @@
 #ifndef GENERAL_IMAGE_HPP
 #define GENERAL_IMAGE_HPP
 
+#include"stdlib.h"
 
 #include"defines.hpp"
+
 
 
 enum
@@ -14,57 +16,15 @@ enum
 };
 
 
-
-/////////////////////// image data /////////////////////////
-//
-//base class for image data
-class CImageBase
-{
-	public:
-	
-		CImageBase(){}
-		virtual ~CImageBase(){}
-	
-	
-		virtual int Load(char* filepath, int flags){return 0;}
-		virtual unsigned char* GetByteBuffer(){return 0;}
-		virtual int GetImageHt(){return 0;}
-		virtual int GetImageWd(){return 0;}
-		virtual int GetChannels(){return 0;}
-		//Mat& operator = (const Mat& m);
-};
-
-
-class CGdalImage: public CImageBase
-{
-	public:
-		CGdalImage();
-		~CGdalImage();
-	
-		int Load(char* filepath, int flags);
-		unsigned char* GetByteBuffer();
-		int GetImageHt(){return m_ht;}
-		int GetImageWd(){return m_wd;}
-		int GetChannels(){return m_nChannels;}
-		
-	private:
-		unsigned char* m_pByteBuffer;
-		int m_ht,m_wd;
-		int m_nChannels;
-		//int m_nCounter; //counter for memory management
-};
-
-
-
-////////////////// Byte Data Buffer  ///////////////////
-class CByteMat
+////////////////// Matrix Data  ///////////////////
+class CMat
 {
 	public:
 		
-		CByteMat();
-		CByteMat(unsigned char* pSrc, int rows, int cols, int dims);
+		CMat();
+		CMat(unsigned char* pSrc, int rows, int cols, int dims);
 		
-		~CByteMat();
+		~CMat();
 		
 		
 		//create byte matrix
@@ -80,7 +40,7 @@ class CByteMat
 	  int GetDims();
 		
 		//operator override
-		CByteMat& operator = (const CByteMat& m);
+		CMat& operator =(CMat& m);
 		
 		//counter for memory management
 		int m_nCounter; 
@@ -89,17 +49,27 @@ class CByteMat
 		unsigned char* m_pBuffer;
 		int m_nRows,m_nCols; 
 		int m_nDims; 
+		CMat* m_pSrc; //pointer to the source image invoked by 'operator ='
 };
 
-inline CByteMat::CByteMat()
+inline CMat::CMat()
 {
 	m_pBuffer = NULL;
 	m_nRows = 0;
 	m_nCols = 0;
 	m_nDims = 0;
+	m_pSrc = NULL;
+	m_nCounter = 0;
 }
-inline CByteMat::CByteMat(unsigned char* pSrc, int rows, int cols, int dims)
+inline CMat::CMat(unsigned char* pSrc, int rows, int cols, int dims)
 {
+	m_pBuffer = NULL;
+	m_nRows = 0;
+	m_nCols = 0;
+	m_nDims = 0;
+	m_pSrc = NULL;
+	m_nCounter = 0;
+	
 	if(pSrc!=NULL)
 	{
 		m_pBuffer = (unsigned char*)malloc(rows*cols*dims);
@@ -109,37 +79,44 @@ inline CByteMat::CByteMat(unsigned char* pSrc, int rows, int cols, int dims)
 		m_nDims = dims;
 	}	
 }
-inline CByteMat::~CByteMat()
+inline CMat::~CMat()
 { 
-	printf("CByteMat counter: %d \n", m_nCounter);
-	
-	if(m_nCounter)
-		 m_nCounter--;
+	printf("CMat counter: %d \n", m_nCounter);
 		 
 	if(m_nCounter==0)
+	{
+		printf("Release Mat memory ... \n");
 		free(m_pBuffer);
-		
+	}
+	
+	if( m_pSrc!=NULL)
+		m_pSrc->m_nCounter--;	
 }
-inline CByteMat::GetBuffer()
+inline unsigned char* CMat::GetBuffer()
 {
 	return m_pBuffer;
 }	
-inline CByteMat::GetRows()
+inline int CMat::GetRows()
 {
 	return m_nRows;
 }	
-inline CByteMat::GetCols()
+inline int CMat::GetCols()
 {
 	return m_nCols;
 }	
-inline CByteMat::GetDims()
+inline int CMat::GetDims()
 {
 	return m_nDims;
 }	
-inline CByteMat& CByteMat::operator = (const CByteMat& m)
+inline CMat& CMat::operator=(CMat& m)
 {
+	 printf("[CMat operator ==] ... \n");   
+	 
 	 if( this != &m )
    {
+   		//save the pointer
+   		m_pSrc = &m;
+			
    		m.m_nCounter ++;
    		
    		m_nCounter = m.m_nCounter;
@@ -155,8 +132,63 @@ inline CByteMat& CByteMat::operator = (const CByteMat& m)
 
 
 
+
+
+
+/////////////////////// image data /////////////////////////
 //
-CByteMat ImageRead(char* filepath, int flags);
+//base class for image data
+class CImageBase
+{
+	public:
+	
+		CImageBase(){}
+		virtual ~CImageBase(){}
+	
+	
+		virtual int Load(char* filepath, int flags){return 0;}
+		virtual int Write(char* filepath, 
+			unsigned char* pImage, int ht, int wd, int nChannels){return 0;}
+		
+		virtual unsigned char* GetByteBuffer(){return 0;}
+		virtual int GetImageHt(){return 0;}
+		virtual int GetImageWd(){return 0;}
+		virtual int GetChannels(){return 0;}
+		//Mat& operator = (const Mat& m);
+};
+class CGdalImage: public CImageBase
+{
+	public:
+		CGdalImage();
+		~CGdalImage();
+	
+		int Load(char* filepath, int flags);
+		int Write(char* filepath, 
+			unsigned char* pImage, int ht, int wd, int nChannels);
+		
+		unsigned char* GetByteBuffer();
+		int GetImageHt(){return m_ht;}
+		int GetImageWd(){return m_wd;}
+		int GetChannels(){return m_nChannels;}
+		
+	private:
+		unsigned char* m_pByteBuffer;
+		int m_ht,m_wd;
+		int m_nChannels;
+		//int m_nCounter; //counter for memory management
+};
+
+
+
+
+//
+CMat ImageRead(char* filepath, int flags);
+int  ImageWrite(char* filepath, CMat& image);
+
+
+
+
+
 
 
 ////////////////////// feature data //////////////////////////
