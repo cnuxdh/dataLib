@@ -1,6 +1,7 @@
 
 
 #include"dataBase.hpp"
+#include "badata.hpp"
 
 
 //gdal header file

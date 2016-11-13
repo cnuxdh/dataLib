@@ -4,15 +4,16 @@
 #include"stdlib.h"
 
 #include"defines.hpp"
+#include "badata.hpp"
 
 
 
 enum
 {
 /* 8bit, gray */
-    CV_LOAD_IMAGE_GRAYSCALE  =0,
+    LOAD_IMAGE_GRAYSCALE  =0,
 /* color */
-    CV_LOAD_IMAGE_COLOR      =1,
+    LOAD_IMAGE_COLOR      =1,
 };
 
 
