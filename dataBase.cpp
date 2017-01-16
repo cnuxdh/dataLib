@@ -163,8 +163,7 @@ unsigned char* CGdalImage::GetByteBuffer()
 
 //generate bytemat from image
 CMat ImageRead(char* filepath, int flags)
-{
-	
+{	
 	CImageBase* pImage = new CGdalImage();
 	pImage->Load(filepath, flags);
 	

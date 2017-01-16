@@ -3,7 +3,7 @@
 
 #include"stdlib.h"
 
-#include"defines.hpp"
+#include "defines.hpp"
 #include "badata.hpp"
 
 
@@ -49,7 +49,7 @@ class CMat
 	private:
 		unsigned char* m_pBuffer;
 		int m_nRows,m_nCols; 
-		int m_nDims; 
+		int m_nDims;  //channels
 		CMat* m_pSrc; //pointer to the source image invoked by 'operator ='
 };
 
@@ -133,9 +133,6 @@ inline CMat& CMat::operator=(CMat& m)
 
 
 
-
-
-
 /////////////////////// image data /////////////////////////
 //
 //base class for image data
@@ -157,6 +154,7 @@ class CImageBase
 		virtual int GetChannels(){return 0;}
 		//Mat& operator = (const Mat& m);
 };
+
 class CGdalImage: public CImageBase
 {
 	public:
@@ -180,16 +178,10 @@ class CGdalImage: public CImageBase
 };
 
 
-
-
-//
+//flags: 0-gray, 1-RGB 
 CMat ImageRead(char* filepath, int flags);
+
 int  ImageWrite(char* filepath, CMat& image);
-
-
-
-
-
 
 
 ////////////////////// feature data //////////////////////////
